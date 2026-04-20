@@ -63,8 +63,8 @@ app.post('/api/move', (req, res) => {
 
     // Check for match winner
     const scores = computeScores();
-    if (scores.sebastian >= matchTarget) matchWinner = 'sebastian';
-    else if (scores.isabelle >= matchTarget) matchWinner = 'isabelle';
+    if (scores.sebastian >= Math.ceil(matchTarget / 2)) matchWinner = 'sebastian';
+    else if (scores.isabelle >= Math.ceil(matchTarget / 2)) matchWinner = 'isabelle';
 
     return res.json({ status: 'complete', result, matchWinner });
   }
