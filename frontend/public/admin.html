@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RPS Admin 👑</title>
+<link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rock:#FF6B6B;--paper:#4ECDC4;--scissors:#FFE66D;
+    --bg:#1a1a2e;--surface:#16213e;--surface2:#0f3460;
+    --accent:#e94560;--text:#eaeaea;--muted:#8888aa;
+    --sebastian:#FF6B9D;--isabelle:#45B7FF;--win:#51CF66;--tie:#FFD43B;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:
+    radial-gradient(1px 1px at 20% 30%,rgba(255,255,255,0.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 80% 10%,rgba(255,255,255,0.2) 0%,transparent 100%),
+    radial-gradient(1px 1px at 50% 70%,rgba(255,255,255,0.25) 0%,transparent 100%),
+    radial-gradient(2px 2px at 40% 15%,rgba(255,255,255,0.1) 0%,transparent 100%),
+    radial-gradient(2px 2px at 70% 85%,rgba(255,255,255,0.15) 0%,transparent 100%);
+    pointer-events:none;z-index:0;}
+  .page{position:relative;z-index:1;}
+
+  .header{background:var(--surface);border-bottom:2px solid var(--surface2);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+  .header-name{font-family:'Boogaloo',cursive;font-size:1.6rem;color:#bb77ff;}
+  .header-sub{font-size:0.8rem;color:var(--muted);margin-left:0.75rem;}
+  .game-body{padding:2rem;max-width:900px;margin:0 auto;}
+
+  /* MATCH BANNER */
+  .match-banner{background:var(--surface);border-radius:1.5rem;padding:1.2rem 1.8rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+  .match-label{font-family:'Boogaloo',cursive;font-size:1.1rem;color:var(--muted);}
+  .match-pips{display:flex;gap:0.4rem;align-items:center;}
+  .pip{width:18px;height:18px;border-radius:50%;border:2px solid;transition:background 0.3s,transform 0.3s;}
+  .pip.sebastian{border-color:var(--sebastian);}
+  .pip.isabelle{border-color:var(--isabelle);}
+  .pip.filled.sebastian{background:var(--sebastian);transform:scale(1.15);}
+  .pip.filled.isabelle{background:var(--isabelle);transform:scale(1.15);}
+  .match-vs{font-family:'Boogaloo',cursive;font-size:1rem;color:var(--muted);}
+
+  /* SCOREBOARD */
+  .scoreboard{display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;margin-bottom:1.5rem;align-items:center;}
+  .score-card{background:var(--surface);border-radius:1.5rem;padding:1.5rem;text-align:center;border:2px solid transparent;transition:border-color 0.3s,box-shadow 0.3s;}
+  .score-card.sebastian{border-color:rgba(255,107,157,0.4);}
+  .score-card.isabelle{border-color:rgba(69,183,255,0.4);}
+  .score-card.leading{box-shadow:0 0 20px rgba(255,255,255,0.08);}
+  .score-label{font-family:'Boogaloo',cursive;font-size:1.3rem;margin-bottom:0.25rem;}
+  .score-card.sebastian .score-label{color:var(--sebastian);}
+  .score-card.isabelle .score-label{color:var(--isabelle);}
+  .score-number{font-family:'Boogaloo',cursive;font-size:3.5rem;line-height:1;}
+  .score-card.sebastian .score-number{color:var(--sebastian);}
+  .score-card.isabelle .score-number{color:var(--isabelle);}
+  .score-ties{text-align:center;}
+  .score-ties .ties-label{color:var(--muted);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;}
+  .score-ties .ties-num{font-family:'Boogaloo',cursive;font-size:1.8rem;color:var(--tie);}
+
+  /* MATCH OVER */
+  #match-over-banner{display:none;background:var(--surface);border-radius:2rem;padding:2.5rem;margin-bottom:2rem;text-align:center;border:3px solid rgba(255,255,255,0.15);animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);}
+  #match-over-banner.show{display:block;}
+  .match-over-trophy{font-size:5rem;display:inline-block;animation:wobble 1s ease 0.3s;}
+  .match-over-title{font-family:'Boogaloo',cursive;font-size:2.8rem;margin:0.5rem 0;}
+  .match-over-sub{color:var(--muted);font-size:1rem;}
+
+  /* ADMIN PANEL */
+  .admin-panel{background:rgba(155,93,229,0.1);border:2px solid rgba(155,93,229,0.3);border-radius:2rem;padding:2rem;margin-bottom:2rem;}
+  .admin-title{font-family:'Boogaloo',cursive;font-size:1.6rem;color:#bb77ff;margin-bottom:0.5rem;}
+  .admin-subtitle{color:var(--muted);font-size:0.9rem;margin-bottom:1.5rem;}
+  .admin-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:1.5rem;}
+  .admin-stat-card{background:var(--surface2);border-radius:1rem;padding:1rem;text-align:center;}
+  .admin-stat-num{font-family:'Boogaloo',cursive;font-size:2.2rem;color:#bb77ff;}
+  .admin-stat-label{font-size:0.78rem;color:var(--muted);margin-top:0.2rem;}
+  .best-of-selector{margin-bottom:1.5rem;}
+  .best-of-label{font-size:0.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.6rem;font-weight:700;}
+  .best-of-btns{display:flex;gap:0.6rem;flex-wrap:wrap;}
+  .best-of-btn{background:var(--surface2);border:2px solid rgba(155,93,229,0.3);color:var(--muted);padding:0.5rem 1.1rem;border-radius:1rem;cursor:pointer;font-family:'Boogaloo',cursive;font-size:1.1rem;transition:all 0.2s;}
+  .best-of-btn:hover{border-color:#bb77ff;color:var(--text);}
+  .best-of-btn.active{background:rgba(155,93,229,0.25);border-color:#bb77ff;color:#bb77ff;}
+
+  /* LIVE STATUS */
+  .live-status{background:var(--surface2);border-radius:1.2rem;padding:1rem 1.5rem;margin-bottom:1.5rem;display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;}
+  .live-dot{width:10px;height:10px;border-radius:50%;background:var(--win);animation:pulse 1.5s infinite;flex-shrink:0;}
+  .live-label{font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.2rem;}
+  .live-value{font-weight:700;font-size:0.95rem;}
+
+  /* MOVES REVEAL */
+  .move-reveal{display:flex;gap:2rem;align-items:center;justify-content:center;margin:1rem 0;flex-wrap:wrap;}
+  .move-reveal-player{text-align:center;}
+  .move-reveal-name{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.3rem;}
+  .move-reveal-emoji{font-size:3rem;}
+  .move-reveal-label{font-family:'Boogaloo',cursive;font-size:1rem;margin-top:0.2rem;}
+  .move-reveal-pending{font-size:2rem;opacity:0.3;}
+
+  .reset-btn{background:rgba(233,69,96,0.2);border:2px solid rgba(233,69,96,0.5);color:#ff8fa3;padding:0.75rem 1.5rem;border-radius:1rem;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;transition:all 0.2s;}
+  .reset-btn:hover{background:rgba(233,69,96,0.35);border-color:var(--accent);color:white;}
+
+  /* HISTORY */
+  .history-section{background:var(--surface);border-radius:2rem;padding:2rem;margin-bottom:2rem;}
+  .section-title{font-family:'Boogaloo',cursive;font-size:1.6rem;margin-bottom:1.2rem;}
+  .history-empty{text-align:center;color:var(--muted);padding:2rem;font-size:0.95rem;}
+  table{width:100%;border-collapse:collapse;}
+  th{text-align:left;padding:0.6rem 1rem;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);border-bottom:1px solid var(--surface2);}
+  td{padding:0.8rem 1rem;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.95rem;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,0.02);}
+  .winner-badge{display:inline-block;padding:0.2rem 0.7rem;border-radius:2rem;font-size:0.78rem;font-weight:700;letter-spacing:0.05em;}
+  .winner-badge.sebastian{background:rgba(255,107,157,0.2);color:var(--sebastian);}
+  .winner-badge.isabelle{background:rgba(69,183,255,0.2);color:var(--isabelle);}
+  .winner-badge.tie{background:rgba(255,212,59,0.2);color:var(--tie);}
+
+  /* CONFETTI */
+  .confetti-piece{position:fixed;border-radius:2px;animation:confettiFall linear forwards;pointer-events:none;z-index:1000;}
+
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  @keyframes popIn{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}
+  @keyframes wobble{0%{transform:rotate(0)}25%{transform:rotate(-15deg)}50%{transform:rotate(15deg)}75%{transform:rotate(-8deg)}100%{transform:rotate(0)}}
+  @keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+  @media(max-width:600px){
+    .scoreboard{grid-template-columns:1fr 1fr;grid-template-rows:auto auto;}
+    .score-ties{grid-column:1/-1;}
+  }
+</style>
+</head>
+<body class="page">
+
+<div class="header">
+  <div style="display:flex;align-items:baseline;gap:0.5rem;">
+    <span class="header-name">👑 Dad's Dashboard</span>
+    <span class="header-sub">Admin view</span>
+  </div>
+  <a href="/" style="background:var(--surface2);border:1px solid rgba(255,255,255,0.1);color:var(--muted);padding:0.4rem 1rem;border-radius:2rem;font-size:0.85rem;text-decoration:none;">View Player Screen</a>
+</div>
+
+<div class="game-body">
+
+  <div id="match-over-banner">
+    <div class="match-over-trophy" id="match-over-trophy">🏆</div>
+    <div class="match-over-title" id="match-over-title"></div>
+    <div class="match-over-sub" id="match-over-sub"></div>
+  </div>
+
+  <!-- Match Progress -->
+  <div class="match-banner">
+    <div>
+      <div class="match-label" id="match-label">Best of 3</div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem">First to <span id="match-target-display">2</span> wins</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+      <div><div style="font-size:0.7rem;color:var(--sebastian);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.3rem">Sebastian</div><div class="match-pips" id="pips-sebastian"></div></div>
+      <div class="match-vs">vs</div>
+      <div><div style="font-size:0.7rem;color:var(--isabelle);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.3rem">Isabelle</div><div class="match-pips" id="pips-isabelle"></div></div>
+    </div>
+  </div>
+
+  <!-- Scoreboard -->
+  <div class="scoreboard">
+    <div class="score-card sebastian" id="score-card-sebastian"><div class="score-label">Sebastian</div><div class="score-number" id="score-sebastian">0</div><div style="color:var(--muted);font-size:0.78rem;margin-top:0.3rem">wins</div></div>
+    <div class="score-ties"><div class="ties-label">Ties</div><div class="ties-num" id="score-ties">0</div></div>
+    <div class="score-card isabelle" id="score-card-isabelle"><div class="score-label">Isabelle</div><div class="score-number" id="score-isabelle">0</div><div style="color:var(--muted);font-size:0.78rem;margin-top:0.3rem">wins</div></div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div class="admin-panel">
+    <div class="admin-title">Control Panel</div>
+    <div class="admin-subtitle">Set match length, watch live moves, reset scores.</div>
+
+    <div class="best-of-selector">
+      <div class="best-of-label">Match Length</div>
+      <div class="best-of-btns">
+        <button class="best-of-btn" onclick="setMatch(1)">Bo1</button>
+        <button class="best-of-btn active" onclick="setMatch(3)">Bo3</button>
+        <button class="best-of-btn" onclick="setMatch(5)">Bo5</button>
+        <button class="best-of-btn" onclick="setMatch(7)">Bo7</button>
+      </div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.5rem">⚠️ Changing match length resets scores</div>
+    </div>
+
+    <div class="admin-stats">
+      <div class="admin-stat-card"><div class="admin-stat-num" id="admin-total">0</div><div class="admin-stat-label">Total Rounds</div></div>
+      <div class="admin-stat-card"><div class="admin-stat-num" id="admin-seb-wins" style="color:var(--sebastian)">0</div><div class="admin-stat-label">Sebastian Wins</div></div>
+      <div class="admin-stat-card"><div class="admin-stat-num" id="admin-isa-wins" style="color:var(--isabelle)">0</div><div class="admin-stat-label">Isabelle Wins</div></div>
+      <div class="admin-stat-card"><div class="admin-stat-num" id="admin-ties" style="color:var(--tie)">0</div><div class="admin-stat-label">Ties</div></div>
+    </div>
+
+    <!-- Live move status — Dad sees what each player picked in real time -->
+    <div class="best-of-label" style="margin-bottom:0.6rem">Live Round</div>
+    <div class="live-status">
+      <div class="live-dot"></div>
+      <div style="flex:1">
+        <div class="move-reveal">
+          <div class="move-reveal-player">
+            <div class="move-reveal-name">Sebastian</div>
+            <div id="live-seb" class="move-reveal-pending">❓</div>
+            <div id="live-seb-label" class="move-reveal-label" style="color:var(--muted)"></div>
+          </div>
+          <div style="font-family:'Boogaloo',cursive;font-size:1.5rem;color:var(--muted)">VS</div>
+          <div class="move-reveal-player">
+            <div class="move-reveal-name">Isabelle</div>
+            <div id="live-isa" class="move-reveal-pending">❓</div>
+            <div id="live-isa-label" class="move-reveal-label" style="color:var(--muted)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="reset-btn" onclick="adminReset()">🗑️ Reset Scores</button>
+  </div>
+
+  <!-- History -->
+  <div class="history-section">
+    <div class="section-title">🏆 Game History</div>
+    <div id="history-container"><div class="history-empty">No games yet — start playing!</div></div>
+  </div>
+
+</div>
+
+<script>
+const API = 'https://rps-production-b0b0.up.railway.app/api';
+const MOVE_EMOJI = { rock:'✊', paper:'✋', scissors:'✌️' };
+let matchTarget = 3, lastMatchWinner = null;
+
+function playTone(freq,type,dur,vol=0.3,delay=0){
+  try{const ctx=new(window.AudioContext||window.webkitAudioContext)(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.connect(gain);gain.connect(ctx.destination);osc.type=type;osc.frequency.value=freq;const t=ctx.currentTime+delay;gain.gain.setValueAtTime(vol,t);gain.gain.exponentialRampToValueAtTime(0.001,t+dur);osc.start(t);osc.stop(t+dur);}catch(e){}
+}
+function playMatchWinFanfare(){[523,659,784,880,1047,1319].forEach((f,i)=>playTone(f,'sine',0.35,0.35,i*0.1));}
+
+function launchConfetti(color){
+  const colors=color?[color,'#fff',color]:['#FF6B9D','#45B7FF','#FFE66D','#51CF66'];
+  for(let i=0;i<80;i++){const el=document.createElement('div');el.className='confetti-piece';el.style.cssText=`left:${Math.random()*100}vw;top:-20px;background:${colors[Math.floor(Math.random()*colors.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*0.5}s;`;document.body.appendChild(el);setTimeout(()=>el.remove(),4000);}
+}
+
+async function refreshState() {
+  try {
+    const r = await fetch(`${API}/state?username=dad`);
+    const s = await r.json();
+    matchTarget = s.matchTarget || 3;
+
+    updateScores(s.scores);
+    updateMatchPips(s.scores, s.matchTarget);
+    updateMatchLabel(s.matchTarget);
+    updateAdminStats(s);
+    updateLiveMoves(s);
+    updateHistory(s.history);
+    syncBestOfButtons(s.matchTarget);
+
+    if (s.matchWinner && s.matchWinner !== lastMatchWinner) {
+      lastMatchWinner = s.matchWinner;
+      showMatchOver(s.matchWinner, s.matchTarget);
+    }
+    if (!s.matchWinner) lastMatchWinner = null;
+  } catch(e){}
+}
+
+function updateScores(scores) {
+  document.getElementById('score-sebastian').textContent = scores.sebastian;
+  document.getElementById('score-isabelle').textContent  = scores.isabelle;
+  document.getElementById('score-ties').textContent      = scores.ties;
+  document.getElementById('score-card-sebastian').classList.toggle('leading', scores.sebastian > scores.isabelle);
+  document.getElementById('score-card-isabelle').classList.toggle('leading',  scores.isabelle > scores.sebastian);
+}
+
+function updateMatchPips(scores, target) {
+  const needed = Math.ceil(target / 2);
+  ['sebastian','isabelle'].forEach(p => {
+    const el = document.getElementById('pips-'+p); el.innerHTML = '';
+    for(let i=0;i<needed;i++){const pip=document.createElement('div');pip.className='pip '+p+(i<scores[p]?' filled':'');el.appendChild(pip);}
+  });
+}
+
+function updateMatchLabel(target) {
+  document.getElementById('match-label').textContent = 'Best of ' + target;
+  document.getElementById('match-target-display').textContent = Math.ceil(target/2);
+}
+
+function updateAdminStats(s) {
+  document.getElementById('admin-total').textContent    = s.history.length;
+  document.getElementById('admin-seb-wins').textContent = s.scores.sebastian;
+  document.getElementById('admin-isa-wins').textContent = s.scores.isabelle;
+  document.getElementById('admin-ties').textContent     = s.scores.ties;
+}
+
+function updateLiveMoves(s) {
+  // Dad can see each player's move as soon as they pick it
+  const sebEl      = document.getElementById('live-seb');
+  const sebLabel   = document.getElementById('live-seb-label');
+  const isaEl      = document.getElementById('live-isa');
+  const isaLabel   = document.getElementById('live-isa-label');
+
+  if (s.sebastianMove) {
+    sebEl.textContent   = MOVE_EMOJI[s.sebastianMove];
+    sebEl.className     = 'move-reveal-emoji';
+    sebLabel.textContent = s.sebastianMove;
+    sebLabel.style.color = 'var(--sebastian)';
+  } else {
+    sebEl.textContent   = s.sebastianReady ? '🤫' : '❓';
+    sebEl.className     = 'move-reveal-pending';
+    sebLabel.textContent = s.sebastianReady ? 'chosen' : 'waiting...';
+    sebLabel.style.color = 'var(--muted)';
+  }
+
+  if (s.isabelleMove) {
+    isaEl.textContent   = MOVE_EMOJI[s.isabelleMove];
+    isaEl.className     = 'move-reveal-emoji';
+    isaLabel.textContent = s.isabelleMove;
+    isaLabel.style.color = 'var(--isabelle)';
+  } else {
+    isaEl.textContent   = s.isabelleReady ? '🤫' : '❓';
+    isaEl.className     = 'move-reveal-pending';
+    isaLabel.textContent = s.isabelleReady ? 'chosen' : 'waiting...';
+    isaLabel.style.color = 'var(--muted)';
+  }
+}
+
+function updateHistory(history) {
+  const c = document.getElementById('history-container');
+  if (!history.length) { c.innerHTML='<div class="history-empty">No games yet — start playing!</div>'; return; }
+  c.innerHTML = `<table><thead><tr><th>Round</th><th>Sebastian</th><th>Isabelle</th><th>Winner</th><th>Time</th></tr></thead><tbody>`+
+    history.map(g=>`<tr>
+      <td style="color:var(--muted)">#${g.round}</td>
+      <td>${MOVE_EMOJI[g.sebastianMove]} ${g.sebastianMove}</td>
+      <td>${MOVE_EMOJI[g.isabelleMove]} ${g.isabelleMove}</td>
+      <td><span class="winner-badge ${g.winner}">${g.winner==='tie'?'🤝 Tie':'🏆 '+(g.winner==='sebastian'?'Sebastian':'Isabelle')}</span></td>
+      <td style="color:var(--muted);font-size:0.78rem">${new Date(g.timestamp).toLocaleTimeString()}</td>
+    </tr>`).join('')+`</tbody></table>`;
+}
+
+function syncBestOfButtons(target) {
+  const map={Bo1:1,Bo3:3,Bo5:5,Bo7:7};
+  document.querySelectorAll('.best-of-btn').forEach(b=>b.classList.toggle('active',map[b.textContent]===target));
+}
+
+function showMatchOver(winner, target) {
+  const banner = document.getElementById('match-over-banner');
+  banner.classList.add('show');
+  const name  = winner==='sebastian' ? 'Sebastian' : 'Isabelle';
+  const color = winner==='sebastian' ? 'var(--sebastian)' : 'var(--isabelle)';
+  document.getElementById('match-over-trophy').textContent = '🏆';
+  document.getElementById('match-over-title').textContent  = name + ' wins the match!';
+  document.getElementById('match-over-title').style.color  = color;
+  document.getElementById('match-over-sub').textContent    = 'Best of ' + target + ' · Start a new match below';
+  playMatchWinFanfare();
+  launchConfetti(winner==='sebastian'?'#FF6B9D':'#45B7FF');
+  setTimeout(()=>launchConfetti(), 700);
+}
+
+async function setMatch(target) {
+  if (!confirm('Start a new Best of '+target+' match? This resets all scores.')) return;
+  await fetch(`${API}/set-match`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'dad',target})});
+  document.getElementById('match-over-banner').classList.remove('show');
+  lastMatchWinner = null;
+  refreshState();
+}
+
+async function adminReset() {
+  if (!confirm('Reset all scores and history? This cannot be undone.')) return;
+  await fetch(`${API}/reset`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'dad'})});
+  document.getElementById('match-over-banner').classList.remove('show');
+  lastMatchWinner = null;
+  refreshState();
+}
+
+// Also need to expose moves via the state endpoint — update backend to include current moves for dad
+refreshState();
+setInterval(refreshState, 2000);
+</script>
+</body>
+</html>

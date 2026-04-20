@@ -75,6 +75,8 @@ app.get('/api/state', (req, res) => {
   const { username } = req.query;
   res.json({
     hasSubmitted: username ? !!currentRound[username] : null,
+    sebastianMove: username === 'dad' ? currentRound.sebastian : null,
+    isabelleMove:  username === 'dad' ? currentRound.isabelle  : null,
     sebastianReady: !!currentRound.sebastian,
     isabelleReady:  !!currentRound.isabelle,
     history: gameHistory,
