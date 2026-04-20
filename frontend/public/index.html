@@ -188,10 +188,10 @@
     <div class="game-title">✊✋✌️</div>
     <div style="font-family:'Boogaloo',cursive;font-size:2rem;text-align:center;margin-bottom:0.2rem;">Rock Paper Scissors</div>
     <div class="game-subtitle">Who are you?</div>
-    <div class="player-buttons">
-      <button class="player-btn btn-sebastian" onclick="login('sebastian')"><span class="btn-emoji">🎮</span> Sebastian</button>
-      <button class="player-btn btn-isabelle"  onclick="login('isabelle')"><span class="btn-emoji">🌟</span> Isabelle</button>
+    <div class="player-buttons" id="player-buttons">
+      <!-- buttons injected by JS based on device -->
     </div>
+    <div id="device-error" style="display:none;text-align:center;color:#ff8fa3;font-size:0.9rem;margin-top:1rem;padding:1rem;background:rgba(233,69,96,0.1);border-radius:1rem;"></div>
   </div>
 </div>
 
@@ -289,6 +289,32 @@ const API = 'https://rps-production-b0b0.up.railway.app/api';
 let currentUser = null, pollInterval = null, lastResultRound = null;
 let matchTarget = 3, throwInProgress = false;
 const MOVE_EMOJI = { rock:'✊', paper:'✋', scissors:'✌️' };
+
+// ── DEVICE LOGIN GATING ──
+function detectDevice() {
+  const ua = navigator.userAgent;
+  const isIPad   = /iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isIPhone = /iPhone/.test(ua);
+  return { isIPad, isIPhone };
+}
+
+function initLoginButtons() {
+  const { isIPad, isIPhone } = detectDevice();
+  const container = document.getElementById('player-buttons');
+  const errEl     = document.getElementById('device-error');
+
+  if (isIPhone) {
+    container.innerHTML = `<button class="player-btn btn-sebastian" onclick="login('sebastian')"><span class="btn-emoji">🎮</span> Sebastian</button>`;
+  } else if (isIPad) {
+    container.innerHTML = `<button class="player-btn btn-isabelle" onclick="login('isabelle')"><span class="btn-emoji">🌟</span> Isabelle</button>`;
+  } else {
+    container.innerHTML = '';
+    errEl.style.display = 'block';
+    errEl.textContent   = '📱 Open this on your iPhone or iPad to play!';
+  }
+}
+
+initLoginButtons();
 
 // ── AUDIO (Web Audio API — no files needed) ──
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
