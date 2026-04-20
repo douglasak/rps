@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rock Paper Scissors ✊✋✌️</title>
+<link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rock: #FF6B6B;
+    --paper: #4ECDC4;
+    --scissors: #FFE66D;
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --surface2: #0f3460;
+    --accent: #e94560;
+    --text: #eaeaea;
+    --muted: #8888aa;
+    --sebastian: #FF6B9D;
+    --isabelle: #45B7FF;
+    --win: #51CF66;
+    --tie: #FFD43B;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated starfield background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 70%, rgba(255,255,255,0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.15) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(2px 2px at 40% 15%, rgba(255,255,255,0.1) 0%, transparent 100%),
+      radial-gradient(2px 2px at 70% 85%, rgba(255,255,255,0.15) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; }
+
+  /* ── LOGIN SCREEN ── */
+  #login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    animation: fadeIn 0.6s ease;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 2px solid var(--surface2);
+    border-radius: 2rem;
+    padding: 3rem 2.5rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(233,69,96,0.1);
+  }
+
+  .game-title {
+    font-family: 'Boogaloo', cursive;
+    font-size: 3.2rem;
+    text-align: center;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+    background: linear-gradient(135deg, var(--rock), var(--scissors), var(--paper));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .game-subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .player-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .player-btn {
+    border: none;
+    border-radius: 1.2rem;
+    padding: 1.1rem 1.5rem;
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .player-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .player-btn:hover::before { opacity: 1; }
+  .player-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
+  .player-btn:active { transform: translateY(0); }
+
+  .btn-sebastian { background: linear-gradient(135deg, #FF6B9D, #c9184a); color: white; }
+  .btn-isabelle  { background: linear-gradient(135deg, #45B7FF, #0077b6); color: white; }
+  .btn-dad       { background: linear-gradient(135deg, #9b5de5, #560bad); color: white; }
+
+  .btn-emoji { margin-right: 0.5rem; font-size: 1.4rem; }
+
+  /* ── GAME SCREEN ── */
+  #game-screen { display: none; min-height: 100vh; }
+
+  .header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--surface2);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-name {
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.6rem;
+  }
+
+  .header-name.sebastian { color: var(--sebastian); }
+  .header-name.isabelle  { color: var(--isabelle); }
+  .header-name.dad       { color: #bb77ff; }
+
+  .logout-btn {
+    background: var(--surface2);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--muted);
+    padding: 0.4rem 1rem;
+    border-radius: 2rem;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .logout-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.3); }
+
+  .game-body { padding: 2rem; max-width: 900px; margin: 0 auto; }
+
+  /* Scoreboard */
+  .scoreboard {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    align-items: center;
+  }
+
+  .score-card {
+    background: var(--surface);
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: border-color 0.3s;
+  }
+
+  .score-card.sebastian { border-color: rgba(255,107,157,0.4); }
+  .score-card.isabelle  { border-color: rgba(69,183,255,0.4); }
+
+  .score-label {
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.3rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .score-card.sebastian .score-label { color: var(--sebastian); }
+  .score-card.isabelle  .score-label { color: var(--isabelle); }
+
+  .score-number {
+    font-family: 'Boogaloo', cursive;
+    font-size: 3.5rem;
+    line-height: 1;
+  }
+
+  .score-card.sebastian .score-number { color: var(--sebastian); }
+  .score-card.isabelle  .score-number { color: var(--isabelle); }
+
+  .score-ties {
+    text-align: center;
+  }
+
+  .score-ties .ties-label { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; }
+  .score-ties .ties-num { font-family: 'Boogaloo', cursive; font-size: 1.8rem; color: var(--tie); }
+
+  /* Move selection */
+  .move-section {
+    background: var(--surface);
+    border-radius: 2rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .move-title {
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.6rem;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+  }
+
+  .move-buttons {
+    display: flex;
+    gap: 1.2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .move-btn {
+    background: var(--surface2);
+    border: 3px solid transparent;
+    border-radius: 1.5rem;
+    padding: 1.5rem 2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 130px;
+  }
+
+  .move-btn:hover { transform: translateY(-4px) scale(1.05); }
+  .move-btn:active { transform: scale(0.97); }
+
+  .move-btn.rock     { border-color: var(--rock); }
+  .move-btn.paper    { border-color: var(--paper); }
+  .move-btn.scissors { border-color: var(--scissors); }
+
+  .move-btn:hover.rock     { background: rgba(255,107,107,0.2); box-shadow: 0 0 20px rgba(255,107,107,0.3); }
+  .move-btn:hover.paper    { background: rgba(78,205,196,0.2); box-shadow: 0 0 20px rgba(78,205,196,0.3); }
+  .move-btn:hover.scissors { background: rgba(255,230,109,0.2); box-shadow: 0 0 20px rgba(255,230,109,0.3); }
+
+  .move-btn.selected.rock     { background: rgba(255,107,107,0.25); box-shadow: 0 0 25px rgba(255,107,107,0.4); }
+  .move-btn.selected.paper    { background: rgba(78,205,196,0.25); box-shadow: 0 0 25px rgba(78,205,196,0.4); }
+  .move-btn.selected.scissors { background: rgba(255,230,109,0.25); box-shadow: 0 0 25px rgba(255,230,109,0.4); }
+
+  .move-emoji { font-size: 3rem; }
+  .move-label { font-family: 'Boogaloo', cursive; font-size: 1.1rem; color: var(--muted); }
+
+  .move-btn.selected .move-label { color: var(--text); }
+
+  .waiting-msg {
+    margin-top: 1.5rem;
+    padding: 1rem 1.5rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 1rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+    animation: pulse 2s infinite;
+  }
+
+  .ready-indicators {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .ready-pill {
+    padding: 0.3rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .ready-pill.ready { background: rgba(81,207,102,0.2); color: var(--win); border: 1px solid var(--win); }
+  .ready-pill.waiting { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid rgba(255,255,255,0.1); }
+
+  /* Result banner */
+  .result-banner {
+    display: none;
+    background: var(--surface);
+    border-radius: 2rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+
+  .result-banner.show { display: block; }
+
+  .result-headline {
+    font-family: 'Boogaloo', cursive;
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-matchup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 1.2rem 0;
+    font-size: 1rem;
+  }
+
+  .result-player { text-align: center; }
+  .result-player-name { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  .result-player-move { font-size: 3.5rem; }
+  .result-vs { font-family: 'Boogaloo', cursive; font-size: 1.5rem; color: var(--muted); }
+
+  /* History table */
+  .history-section {
+    background: var(--surface);
+    border-radius: 2rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.6rem;
+    margin-bottom: 1.2rem;
+    color: var(--text);
+  }
+
+  .history-empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 2rem;
+    font-size: 0.95rem;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  th {
+    text-align: left;
+    padding: 0.6rem 1rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--surface2);
+  }
+
+  td {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.95rem;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .move-icon { font-size: 1.3rem; }
+
+  .winner-badge {
+    display: inline-block;
+    padding: 0.2rem 0.7rem;
+    border-radius: 2rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .winner-badge.sebastian { background: rgba(255,107,157,0.2); color: var(--sebastian); }
+  .winner-badge.isabelle  { background: rgba(69,183,255,0.2); color: var(--isabelle); }
+  .winner-badge.tie       { background: rgba(255,212,59,0.2); color: var(--tie); }
+
+  /* Admin panel */
+  .admin-panel {
+    background: rgba(155,93,229,0.1);
+    border: 2px solid rgba(155,93,229,0.3);
+    border-radius: 2rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .admin-title {
+    font-family: 'Boogaloo', cursive;
+    font-size: 1.6rem;
+    color: #bb77ff;
+    margin-bottom: 0.5rem;
+  }
+
+  .admin-subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+  .admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .admin-stat-card {
+    background: var(--surface2);
+    border-radius: 1rem;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .admin-stat-num {
+    font-family: 'Boogaloo', cursive;
+    font-size: 2.2rem;
+    color: #bb77ff;
+  }
+
+  .admin-stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+
+  .reset-btn {
+    background: rgba(233,69,96,0.2);
+    border: 2px solid rgba(233,69,96,0.5);
+    color: #ff8fa3;
+    padding: 0.75rem 1.5rem;
+    border-radius: 1rem;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover { background: rgba(233,69,96,0.35); border-color: var(--accent); color: white; }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+  .bounce { animation: bounce 0.5s ease 3; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .scoreboard { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
+    .score-ties { grid-column: 1/-1; }
+    .move-buttons { gap: 0.8rem; }
+    .move-btn { min-width: 100px; padding: 1.2rem 1rem; }
+    .move-emoji { font-size: 2.5rem; }
+    .result-matchup { gap: 1rem; }
+    .result-player-move { font-size: 2.5rem; }
+  }
+</style>
+</head>
+<body class="page">
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="game-title">✊✋✌️</div>
+    <div style="font-family:'Boogaloo',cursive;font-size:2rem;text-align:center;margin-bottom:0.2rem;">Rock Paper Scissors</div>
+    <div class="game-subtitle">Who are you?</div>
+    <div class="player-buttons">
+      <button class="player-btn btn-sebastian" onclick="login('sebastian')">
+        <span class="btn-emoji">🎮</span> Sebastian
+      </button>
+      <button class="player-btn btn-isabelle" onclick="login('isabelle')">
+        <span class="btn-emoji">🌟</span> Isabelle
+      </button>
+      <button class="player-btn btn-dad" onclick="login('dad')">
+        <span class="btn-emoji">👑</span> Dad (Admin)
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen">
+  <div class="header">
+    <span id="header-name" class="header-name"></span>
+    <button class="logout-btn" onclick="logout()">← Switch player</button>
+  </div>
+
+  <div class="game-body">
+
+    <!-- Result Banner -->
+    <div id="result-banner" class="result-banner">
+      <div id="result-headline" class="result-headline"></div>
+      <div class="result-matchup">
+        <div class="result-player">
+          <div class="result-player-name">Sebastian</div>
+          <div id="result-seb-move" class="result-player-move"></div>
+        </div>
+        <div class="result-vs">VS</div>
+        <div class="result-player">
+          <div class="result-player-name">Isabelle</div>
+          <div id="result-isa-move" class="result-player-move"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scoreboard -->
+    <div class="scoreboard">
+      <div class="score-card sebastian">
+        <div class="score-label">Sebastian</div>
+        <div class="score-number" id="score-sebastian">0</div>
+        <div style="color:var(--muted);font-size:0.78rem;margin-top:0.3rem;">wins</div>
+      </div>
+      <div class="score-ties">
+        <div class="ties-label">Ties</div>
+        <div class="ties-num" id="score-ties">0</div>
+      </div>
+      <div class="score-card isabelle">
+        <div class="score-label">Isabelle</div>
+        <div class="score-number" id="score-isabelle">0</div>
+        <div style="color:var(--muted);font-size:0.78rem;margin-top:0.3rem;">wins</div>
+      </div>
+    </div>
+
+    <!-- Move Section (players only) -->
+    <div id="move-section" class="move-section">
+      <div class="move-title" id="move-title">Make your move!</div>
+      <div class="move-buttons" id="move-buttons">
+        <button class="move-btn rock" onclick="submitMove('rock')">
+          <span class="move-emoji">✊</span>
+          <span class="move-label">Rock</span>
+        </button>
+        <button class="move-btn paper" onclick="submitMove('paper')">
+          <span class="move-emoji">✋</span>
+          <span class="move-label">Paper</span>
+        </button>
+        <button class="move-btn scissors" onclick="submitMove('scissors')">
+          <span class="move-emoji">✌️</span>
+          <span class="move-label">Scissors</span>
+        </button>
+      </div>
+      <div id="waiting-msg" class="waiting-msg" style="display:none;"></div>
+      <div id="ready-indicators" class="ready-indicators"></div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="admin-panel" style="display:none;">
+      <div class="admin-title">👑 Admin Dashboard</div>
+      <div class="admin-subtitle">You can see everything, Dad!</div>
+      <div class="admin-stats">
+        <div class="admin-stat-card">
+          <div class="admin-stat-num" id="admin-total">0</div>
+          <div class="admin-stat-label">Total Rounds</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-num" id="admin-seb-wins" style="color:var(--sebastian)">0</div>
+          <div class="admin-stat-label">Sebastian Wins</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-num" id="admin-isa-wins" style="color:var(--isabelle)">0</div>
+          <div class="admin-stat-label">Isabelle Wins</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-num" style="color:var(--tie)" id="admin-ties">0</div>
+          <div class="admin-stat-label">Ties</div>
+        </div>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <strong style="font-size:0.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;">Current Round Status</strong>
+        <div id="admin-current-status" style="margin-top:0.5rem;color:var(--text);font-size:0.95rem;"></div>
+      </div>
+      <button class="reset-btn" onclick="adminReset()">🗑️ Reset All Scores</button>
+    </div>
+
+    <!-- History -->
+    <div class="history-section">
+      <div class="section-title">🏆 Game History</div>
+      <div id="history-container">
+        <div class="history-empty">No games yet — start playing!</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = '/api';
+let currentUser = null;
+let pollInterval = null;
+let lastResultRound = null;
+
+const MOVE_EMOJI = { rock: '✊', paper: '✋', scissors: '✌️' };
+
+async function login(username) {
+  const passwords = { sebastian: 'sebastian', isabelle: 'isabelle', dad: 'dad123' };
+  try {
+    const r = await fetch(`${API}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password: passwords[username] })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    currentUser = data;
+    showGameScreen();
+  } catch (e) {
+    alert('Login failed: ' + e.message);
+  }
+}
+
+function logout() {
+  currentUser = null;
+  clearInterval(pollInterval);
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('game-screen').style.display = 'none';
+  hideResultBanner();
+}
+
+function showGameScreen() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'block';
+
+  const nameEl = document.getElementById('header-name');
+  nameEl.textContent = currentUser.displayName;
+  nameEl.className = 'header-name ' + currentUser.username;
+
+  const isAdmin = currentUser.role === 'admin';
+  document.getElementById('move-section').style.display = isAdmin ? 'none' : 'block';
+  document.getElementById('admin-panel').style.display = isAdmin ? 'block' : 'none';
+
+  hideResultBanner();
+  refreshState();
+  pollInterval = setInterval(refreshState, 2000);
+}
+
+async function submitMove(move) {
+  const btns = document.querySelectorAll('.move-btn');
+  btns.forEach(b => b.classList.remove('selected'));
+  document.querySelector(`.move-btn.${move}`).classList.add('selected', 'bounce');
+
+  try {
+    const r = await fetch(`${API}/move`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: currentUser.username, move })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+
+    if (data.status === 'complete') {
+      showResult(data.result);
+    } else {
+      document.getElementById('waiting-msg').style.display = 'block';
+      document.getElementById('waiting-msg').textContent = '⏳ Waiting for ' +
+        (currentUser.username === 'sebastian' ? 'Isabelle' : 'Sebastian') + ' to choose...';
+      btns.forEach(b => b.disabled = true);
+    }
+  } catch (e) {
+    alert(e.message);
+    btns.forEach(b => b.classList.remove('selected', 'bounce'));
+  }
+}
+
+async function refreshState() {
+  try {
+    const r = await fetch(`${API}/state?username=${currentUser?.username || ''}`);
+    const state = await r.json();
+    updateScores(state.scores);
+    updateHistory(state.history);
+
+    if (currentUser?.role === 'admin') {
+      updateAdminPanel(state);
+    } else {
+      updateReadyIndicators(state);
+      // Check if a new round completed since last check
+      if (state.history.length > 0 && state.history[0].round !== lastResultRound) {
+        const latest = state.history[0];
+        // Only auto-show if both players were ready (i.e. result is new to us)
+        if (lastResultRound !== null && latest.round > lastResultRound) {
+          showResult(latest);
+        }
+        if (lastResultRound === null) lastResultRound = latest.round;
+      }
+
+      // Re-enable buttons if a new round started
+      if (!state.hasSubmitted) {
+        const btns = document.querySelectorAll('.move-btn');
+        btns.forEach(b => { b.disabled = false; b.classList.remove('selected', 'bounce'); });
+        document.getElementById('waiting-msg').style.display = 'none';
+      }
+    }
+  } catch (e) {}
+}
+
+function updateScores(scores) {
+  document.getElementById('score-sebastian').textContent = scores.sebastian;
+  document.getElementById('score-isabelle').textContent = scores.isabelle;
+  document.getElementById('score-ties').textContent = scores.ties;
+}
+
+function updateReadyIndicators(state) {
+  const el = document.getElementById('ready-indicators');
+  if (!state.hasSubmitted) {
+    el.innerHTML = `
+      <span class="ready-pill ${state.sebastianReady ? 'ready' : 'waiting'}">
+        ${state.sebastianReady ? '✅' : '⏳'} Sebastian
+      </span>
+      <span class="ready-pill ${state.isabelleReady ? 'ready' : 'waiting'}">
+        ${state.isabelleReady ? '✅' : '⏳'} Isabelle
+      </span>`;
+  }
+}
+
+function updateAdminPanel(state) {
+  document.getElementById('admin-total').textContent = state.history.length;
+  document.getElementById('admin-seb-wins').textContent = state.scores.sebastian;
+  document.getElementById('admin-isa-wins').textContent = state.scores.isabelle;
+  document.getElementById('admin-ties').textContent = state.scores.ties;
+
+  const status = [];
+  if (state.sebastianReady) status.push('✅ Sebastian has chosen');
+  else status.push('⏳ Waiting for Sebastian');
+  if (state.isabelleReady) status.push('✅ Isabelle has chosen');
+  else status.push('⏳ Waiting for Isabelle');
+  document.getElementById('admin-current-status').innerHTML = status.join(' &nbsp;·&nbsp; ');
+}
+
+function updateHistory(history) {
+  const container = document.getElementById('history-container');
+  if (history.length === 0) {
+    container.innerHTML = '<div class="history-empty">No games yet — start playing!</div>';
+    return;
+  }
+
+  const isAdmin = currentUser?.role === 'admin';
+  const rows = history.map(g => {
+    const winnerLabel = g.winner === 'tie' ? 'Tie' : (g.winner === 'sebastian' ? 'Sebastian' : 'Isabelle');
+    const sebMoves = isAdmin ? `${MOVE_EMOJI[g.sebastianMove]} ${g.sebastianMove}` : `${MOVE_EMOJI[g.sebastianMove]}`;
+    const isaMoves = isAdmin ? `${MOVE_EMOJI[g.isabelleMove]} ${g.isabelleMove}` : `${MOVE_EMOJI[g.isabelleMove]}`;
+    return `
+      <tr>
+        <td style="color:var(--muted)">#${g.round}</td>
+        <td>${sebMoves}</td>
+        <td>${isaMoves}</td>
+        <td><span class="winner-badge ${g.winner}">${g.winner === 'tie' ? '🤝 Tie' : '🏆 ' + winnerLabel}</span></td>
+        <td style="color:var(--muted);font-size:0.78rem">${new Date(g.timestamp).toLocaleTimeString()}</td>
+      </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Round</th>
+          <th>Sebastian</th>
+          <th>Isabelle</th>
+          <th>Winner</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function showResult(result) {
+  lastResultRound = result.round;
+  const banner = document.getElementById('result-banner');
+  banner.classList.add('show');
+
+  let headline, color;
+  if (result.winner === 'tie') {
+    headline = "🤝 It's a Tie!";
+    color = 'var(--tie)';
+  } else if (result.winner === currentUser?.username) {
+    headline = '🎉 You Win!';
+    color = 'var(--win)';
+  } else if (currentUser?.role === 'admin') {
+    headline = result.winner === 'sebastian' ? '🏆 Sebastian Wins!' : '🏆 Isabelle Wins!';
+    color = result.winner === 'sebastian' ? 'var(--sebastian)' : 'var(--isabelle)';
+  } else {
+    headline = '😅 You Lose!';
+    color = 'var(--accent)';
+  }
+
+  document.getElementById('result-headline').textContent = headline;
+  document.getElementById('result-headline').style.color = color;
+  document.getElementById('result-seb-move').textContent = MOVE_EMOJI[result.sebastianMove];
+  document.getElementById('result-isa-move').textContent = MOVE_EMOJI[result.isabelleMove];
+
+  setTimeout(() => {
+    banner.classList.remove('show');
+    // Re-enable move buttons for next round
+    if (currentUser?.role !== 'admin') {
+      const btns = document.querySelectorAll('.move-btn');
+      btns.forEach(b => { b.disabled = false; b.classList.remove('selected', 'bounce'); });
+      document.getElementById('waiting-msg').style.display = 'none';
+    }
+  }, 4000);
+}
+
+function hideResultBanner() {
+  document.getElementById('result-banner').classList.remove('show');
+  lastResultRound = null;
+}
+
+async function adminReset() {
+  if (!confirm('Reset all scores and history? This cannot be undone.')) return;
+  await fetch(`${API}/reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: 'dad' })
+  });
+  hideResultBanner();
+  refreshState();
+}
+</script>
+</body>
+</html>

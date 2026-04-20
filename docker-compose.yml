@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: rps-backend
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: rps-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
