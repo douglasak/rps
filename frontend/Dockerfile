@@ -1,7 +1,7 @@
-FROM nginx:alpine
-COPY public/ /usr/share/nginx/html/
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-EXPOSE 80
-CMD ["/entrypoint.sh"]
+FROM node:20-alpine
+WORKDIR /app
+RUN npm install -g serve
+COPY public/ ./public/
+ARG BACKEND_URL=http://localhost:3001
+RUN sed -i "s|const API = '/api'|const API = '${BACKEND_URL}/api'|g" ./public/index.html
+CMD sh -c "serve -s public -l ${PORT:-3000}"
