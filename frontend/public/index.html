@@ -293,10 +293,10 @@ const MOVE_EMOJI = { rock:'✊', paper:'✋', scissors:'✌️' };
 // ── DEVICE LOGIN GATING ──
 function detectDevice() {
   const ua = navigator.userAgent;
-  const isIPhone = /iPhone/.test(ua);
+  // Must check iPad before iPhone — some UA strings contain both keywords
   const isIPad   = /iPad/.test(ua) ||
-    // iOS 13+ iPads report as Macintosh in Safari
-    (!isIPhone && /Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+                   (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const isIPhone = !isIPad && /iPhone/.test(ua);
   return { isIPad, isIPhone };
 }
 
